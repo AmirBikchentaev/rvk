@@ -32,8 +32,8 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     container_name: villa-finance-api
-    expose:
-      - '4000'
+    ports:
+      - '${API_PORT:-4002}:4000'
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-villa}:${POSTGRES_PASSWORD:-villa_secret}@postgres:5432/${POSTGRES_DB:-villa_finance}
@@ -55,7 +55,8 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+        # Direct API port (no nginx /api). Rebuild web after changing.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4002/api}
     container_name: villa-finance-web
     expose:
       - '3000'

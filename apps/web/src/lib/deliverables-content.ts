@@ -21,20 +21,37 @@ export type DeliverablesDoc = {
 const ru: DeliverablesDoc = {
   pageTitle: 'Отчёт по тестовому заданию',
   pageLead:
-    'От кандидата ожидались: работающий прототип, объяснение финансовой логики, найденные ошибки в данных и схема дальнейшей архитектуры. Ниже — краткая фиксация по каждому пункту.',
+    'Это отчёт по тестовому заданию Senior Business Systems Engineer (Finance & Automation). От кандидата ожидались: работающий прототип, объяснение финансовой логики, найденные ошибки в данных и схема дальнейшей архитектуры — ниже кратко по каждому пункту.',
   sections: [
     {
       id: 'prototype',
       title: '1. Работающий прототип',
-      lead: 'Что сдано и как проверить',
+      lead: 'Архитектура решения и как проверить',
       paragraphs: [
-        'Монорепо (pnpm): NestJS API + PostgreSQL, Next.js dashboard, общий пакет расчётов. Данные загружаются из CSV в `data/` при старте API; фильтры объекта и периода, KPI, три графика, блок качества данных, AI-аналитик (OpenAI function calling или offline-сводка из БД).',
-        'Локально: API на :4000, web на :3002; в Docker — compose с nginx на :8080 (или за reverse-proxy reflexive). Dashboard RU/EN, светлая и тёмная тема.',
+        'Монорепо pnpm workspaces (`apps/api`, `apps/web`, `packages/shared`). Общая доменная логика (формулы accrual/cash, dedupe броней, скан DQ) живёт в `@villa/shared`, чтобы dashboard, API и проверки не расходились в цифрах.',
+        'Backend (NestJS): модули `import` (CSV → TypeORM), `analytics` (KPI, timeseries, разрезы), `data-quality` (скан CSV для флагов), `assistant` (OpenAI tools → те же сервисы), `properties`, опциональный `auth`. При старте `ImportBootstrapService` заливает CSV из `DATA_DIR` (/app/data в Docker) в PostgreSQL; схема через `synchronize: true` (прототип).',
+        'Frontend (Next.js App Router): dashboard на React Query — фильтры объекта/периода, вкладки KPI · графики · AI · качество данных · отчёт; RU/EN, светлая/тёмная тема. Браузер ходит на same-origin `/api/*` (nginx → Nest).',
+        'Деплой: Docker Compose — `postgres`, `api`, `web`, `nginx` (публичный `:8080`). CSV в образе API; KPI и графики читают таблицы фактов, не CSV на каждый запрос (DQ для вкладки «Данные» сканирует файлы).',
+        'Проверка: `:8080` — KPI и объекты в фильтре, `/api/health` с `propertyCount`, графики и ассистент (OpenAI или offline). Локально: API `:4000`, web `:3002`.',
+      ],
+      diagram: [
+        'Браузер',
+        '   │  /        → Next.js (apps/web)',
+        '   │  /api/*   → NestJS (apps/api)',
+        '   ▼',
+        'nginx :8080  ──→  web:3000',
+        '              └──→  api:4000  ──→  PostgreSQL',
+        '                         ▲',
+        '              ImportBootstrap: data/*.csv → facts',
+        '              AnalyticsService ← @villa/shared finance.ts',
+        '              Assistant → tools → Analytics + DataQuality',
       ],
       bullets: [
-        'Импорт: properties, reservations, payments, expenses, commission_rules',
-        'API: `/analytics/*`, `/data-quality/issues`, `/properties`, `/assistant/chat`',
-        'Валидация входа (формат propertyId, DTO whitelist); демо без обязательной авторизации',
+        'shared: типы, finance.ts (KPI/агрегаты), data-quality.ts (коды exclude/review)',
+        'REST: GET `/properties`, `/analytics/summary|timeseries|by-property|by-channel|period-bounds`, GET `/data-quality/issues`, POST `/assistant/chat`, GET `/health`',
+        'CSV-импорт: properties, reservations, payments, expenses, commission_rules',
+        'Защита ввода: ValidationPipe whitelist, propertyId V### + exists; Throttler, helmet, CORS; JWT опционален',
+        'Стек: TypeORM, Postgres 16, Recharts, TanStack Query, Nest 11 / Next 15',
       ],
     },
     {
@@ -112,22 +129,39 @@ const ru: DeliverablesDoc = {
 };
 
 const en: DeliverablesDoc = {
-  pageTitle: 'Assignment deliverables',
+  pageTitle: 'Test assignment report',
   pageLead:
-    'Expected from the candidate: a working prototype, explanation of financial logic, data issues found, and a target architecture. Below is a concise summary for each.',
+    'This page is the report for the Senior Business Systems Engineer (Finance & Automation) test assignment: working prototype, financial logic, data issues found, and target architecture — summarized below.',
   sections: [
     {
       id: 'prototype',
       title: '1. Working prototype',
-      lead: 'What is delivered and how to verify',
+      lead: 'Solution architecture and how to verify',
       paragraphs: [
-        'pnpm monorepo: NestJS API + PostgreSQL, Next.js dashboard, shared finance package. CSV under `data/` is loaded on API startup; property and period filters, KPIs, three charts, data quality panel, AI analyst (OpenAI function calling or offline DB summary).',
-        'Local: API :4000, web :3002; Docker Compose with nginx on :8080 (or behind reflexive reverse proxy). RU/EN UI, light and dark theme.',
+        'pnpm workspaces monorepo (`apps/api`, `apps/web`, `packages/shared`). Accrual/cash formulas, reservation dedupe, and DQ scan live in `@villa/shared` so the UI and API stay aligned.',
+        'Backend (NestJS): `import` (CSV → TypeORM), `analytics` (KPI, timeseries, breakdowns), `data-quality` (CSV scan for flags), `assistant` (OpenAI function tools → same services), `properties`, optional `auth`. `ImportBootstrapService` loads CSV from `DATA_DIR` (/app/data in Docker) on startup; schema via `synchronize: true` (prototype).',
+        'Frontend (Next.js App Router): React Query dashboard — property/period filters, tabs for KPI · charts · AI · data quality · report; RU/EN, light/dark. Browser uses same-origin `/api/*` (nginx → Nest).',
+        'Deploy: Docker Compose — `postgres`, `api`, `web`, `nginx` (public `:8080`). CSV baked into the API image; KPIs/charts read fact tables, not CSV per request (DQ tab rescans files).',
+        'Verify: `:8080` — KPIs and property filter populated, `/api/health` shows `propertyCount`, charts and assistant work (OpenAI or offline). Local: API `:4000`, web `:3002`.',
+      ],
+      diagram: [
+        'Browser',
+        '   │  /        → Next.js (apps/web)',
+        '   │  /api/*   → NestJS (apps/api)',
+        '   ▼',
+        'nginx :8080  ──→  web:3000',
+        '              └──→  api:4000  ──→  PostgreSQL',
+        '                         ▲',
+        '              ImportBootstrap: data/*.csv → facts',
+        '              AnalyticsService ← @villa/shared finance.ts',
+        '              Assistant → tools → Analytics + DataQuality',
       ],
       bullets: [
-        'Import: properties, reservations, payments, expenses, commission_rules',
-        'API: `/analytics/*`, `/data-quality/issues`, `/properties`, `/assistant/chat`',
-        'Input validation (propertyId format, DTO whitelist); demo API without mandatory auth',
+        'shared: types, finance.ts (KPI/aggregates), data-quality.ts (exclude/review codes)',
+        'REST: GET `/properties`, `/analytics/summary|timeseries|by-property|by-channel|period-bounds`, GET `/data-quality/issues`, POST `/assistant/chat`, GET `/health`',
+        'CSV import: properties, reservations, payments, expenses, commission_rules',
+        'Input hardening: ValidationPipe whitelist, propertyId V### + exists; Throttler, helmet, CORS; JWT optional',
+        'Stack: TypeORM, Postgres 16, Recharts, TanStack Query, Nest 11 / Next 15',
       ],
     },
     {

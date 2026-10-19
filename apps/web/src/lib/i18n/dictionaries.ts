@@ -14,7 +14,7 @@ const ru = {
   navCharts: 'Графики',
   navAssistant: 'AI-аналитик',
   navData: 'Данные',
-  navDeliverables: 'Отчёт',
+  navDeliverables: 'Отчёт по тестовому заданию',
   title: 'Финансы портфеля вилл',
   filters: 'Фильтры',
   property: 'Объект',
@@ -127,7 +127,7 @@ const ru = {
   suggest2: 'Почему cash и accrual не сходятся?',
   suggest3: 'Какие проблемы в данных мешают доверять цифрам?',
   suggest4: 'Какая вилла приносит больше всего gross?',
-  authorLabel: 'Автор',
+  authorRepo: 'Репозиторий автора',
   authorContact: 'Telegram',
 };
 
@@ -144,7 +144,7 @@ const en: typeof ru = {
   navCharts: 'Charts',
   navAssistant: 'AI analyst',
   navData: 'Data quality',
-  navDeliverables: 'Deliverables',
+  navDeliverables: 'Test assignment report',
   title: 'Villa portfolio finance',
   filters: 'Filters',
   property: 'Property',
@@ -256,7 +256,7 @@ const en: typeof ru = {
   suggest2: 'Why do cash and accrual differ?',
   suggest3: 'Which data issues should I trust least?',
   suggest4: 'Which villa has the highest gross?',
-  authorLabel: 'Author',
+  authorRepo: "Author's repository",
   authorContact: 'Telegram',
 };
 

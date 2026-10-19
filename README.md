@@ -48,10 +48,12 @@ pnpm --filter @villa/api dev
 
 ```bash
 cp .env.example .env
-# При необходимости: HTTP_PORT=8080, POSTGRES_PORT=5434 (уже по умолчанию)
-# NEXT_PUBLIC_API_URL=http://<IP или домен>:8080/api — URL для браузера
+# На сервере в .env:
+#   NEXT_PUBLIC_API_URL=http://<IP>:4002/api
+#   CORS_ORIGIN=http://<IP>:8080
+#   API_PORT=4002  (открыть в firewall)
+# UI: :8080 (nginx → web), API: :4002 напрямую (nginx /api можно не трогать)
 
-# Вариант A (проще): свой nginx villa на :8080 — reflexive на :80/:443 не трогаем:
 docker compose up --build -d
 
 # Вариант B: один nginx (reflexive) — без контейнера villa-finance-nginx:
@@ -65,8 +67,8 @@ docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml up --bui
 
 | | reflexive | villa-finance (тест) |
 |---|-----------|----------------------|
-| Web | `:3000` | через nginx **`:8080`** |
-| API | `:3001` | только внутри compose (`:4000`) |
+| Web | `:3000` | nginx **`:8080`** |
+| API | `:3001` | хост **`:4002`** → контейнер `:4000` |
 | Postgres (host) | `127.0.0.1:5433` | `127.0.0.1:5434` |
 | Имена контейнеров | `reflexive-*` | `villa-finance-*` |
 | Compose project | `reflexive` | `villa-finance` |
@@ -177,5 +179,5 @@ docker-compose.yml
 
 ## Автор
 
-- Репозиторий: [github.com/AmirBikchentaev/rvk](https://github.com/AmirBikchentaev/rvk)
+- Репозиторий автора: [AmirBikchentaev/rvk](https://github.com/AmirBikchentaev/rvk) (GitHub)
 - Telegram: [@sefrwea](https://t.me/sefrwea)

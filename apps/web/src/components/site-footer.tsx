@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  AUTHOR_GITHUB_REPO,
   AUTHOR_GITHUB_URL,
   AUTHOR_TELEGRAM_HANDLE,
   AUTHOR_TELEGRAM_URL,
@@ -13,14 +14,15 @@ export function SiteFooter() {
   return (
     <footer className="mt-10 border-t border-[var(--border)] pt-6 text-sm text-[var(--text-muted)]">
       <p>
-        {t.authorLabel}:{' '}
+        {t.authorRepo}:{' '}
         <a
           href={AUTHOR_GITHUB_URL}
           className="vf-link font-medium"
           target="_blank"
           rel="noopener noreferrer"
+          title={AUTHOR_GITHUB_URL}
         >
-          github.com/AmirBikchentaev/rvk
+          {AUTHOR_GITHUB_REPO}
         </a>
         {' · '}
         {t.authorContact}:{' '}

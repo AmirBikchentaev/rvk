@@ -2,6 +2,7 @@
 
 import { getDeliverablesDoc } from '@/lib/deliverables-content';
 import {
+  AUTHOR_GITHUB_REPO,
   AUTHOR_GITHUB_URL,
   AUTHOR_TELEGRAM_HANDLE,
   AUTHOR_TELEGRAM_URL,
@@ -19,9 +20,15 @@ export function DeliverablesReport({ locale }: { locale: Locale }) {
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">{doc.pageTitle}</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{doc.pageLead}</p>
         <p className="mt-3 text-sm text-[var(--text-muted)]">
-          {t.authorLabel}:{' '}
-          <a href={AUTHOR_GITHUB_URL} className="vf-link" target="_blank" rel="noopener noreferrer">
-            github.com/AmirBikchentaev/rvk
+          {t.authorRepo}:{' '}
+          <a
+            href={AUTHOR_GITHUB_URL}
+            className="vf-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={AUTHOR_GITHUB_URL}
+          >
+            {AUTHOR_GITHUB_REPO}
           </a>
           {' · '}
           {t.authorContact}:{' '}
