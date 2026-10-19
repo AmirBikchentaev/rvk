@@ -38,7 +38,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-villa}:${POSTGRES_PASSWORD:-villa_secret}@postgres:5432/${POSTGRES_DB:-villa_finance}
       DATA_DIR: /app/data
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1}
@@ -61,6 +61,7 @@ services:
       - '3000'
     environment:
       NODE_ENV: production
+      NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN: ${NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN:-false}
       PORT: '3000'
       HOSTNAME: '0.0.0.0'
     depends_on:

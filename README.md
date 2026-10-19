@@ -39,6 +39,14 @@ pnpm --filter @villa/api dev
 
 Демо-логин (создаётся при старте API): `demo@villa.local` / `demo1234`.
 
+## Безопасность (базово)
+
+- Все `/api/*` (кроме `auth/login`, `auth/refresh`, `GET /health`) требуют **Bearer JWT**.
+- **IDOR:** `propertyId` проверяется в БД; чужая вилла → **404** (не 403). Роль `owner` + `users.owner_id` — только свои объекты; портфель без `propertyId` для owner запрещён.
+- **DQ:** только роли `admin` / `viewer`.
+- **Validation:** whitelist DTO, `propertyId` = `V###`, rate limit (Throttler), helmet, CORS.
+- **Production:** задайте `JWT_SECRET` в `.env` (compose не стартует без него). Для публичного демо без формы логина фронт по-прежнему может вызывать demo login — для реального доступа включите `NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN=true` и добавьте UI логина.
+
 ## Docker Compose (сервер)
 
 ```bash
@@ -46,10 +54,15 @@ cp .env.example .env
 # При необходимости: HTTP_PORT=8080, POSTGRES_PORT=5434 (уже по умолчанию)
 # NEXT_PUBLIC_API_URL=http://<IP или домен>:8080/api — URL для браузера
 
+# Вариант A (проще): свой nginx villa на :8080 — reflexive на :80/:443 не трогаем:
 docker compose up --build -d
+
+# Вариант B: один nginx (reflexive) — без контейнера villa-finance-nginx:
+docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml up --build -d
+# В nginx reflexive проксируй на 127.0.0.1:3002 (web) и 127.0.0.1:4002 (/api/ → API)
 ```
 
-Открыть **http://your-server:8080** (nginx → web + `/api` → NestJS).
+Открыть **http://your-server:8080** (вариант A) или свой subdomain/path через reflexive nginx (вариант B).
 
 ### Рядом с reflexive на одном VPS
 
@@ -135,7 +148,7 @@ docker compose up --build -d
 
 - `synchronize: true` вместо миграций; re-import затирает таблицы фактов.
 - Redis в compose только в profile `full`, не используется в коде.
-- Auth есть, но dashboard endpoints публичные (демо).
+- JWT обязателен на API (кроме `/auth/login`, `/auth/refresh`, `/health`). Demo auto-login только если не задан `NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN=true`.
 - Нет owner statements, FX, payout ledger.
 
 ## Следующие 3 шага

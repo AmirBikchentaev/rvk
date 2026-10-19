@@ -1,28 +1,21 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { Throttle } from '@nestjs/throttler';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { JwtUser } from '../auth/auth.types';
+import { PropertyAccessService } from '../auth/property-access.service';
+import { AnalyticsQueryDto } from '../common/dto/analytics-query.dto';
 import { AnalyticsService } from './analytics.service';
 
-class SummaryQueryDto {
-  @IsOptional()
-  @IsString()
-  propertyId?: string;
-
-  @IsOptional()
-  @IsDateString()
-  from?: string;
-
-  @IsOptional()
-  @IsDateString()
-  to?: string;
-}
-
 @Controller('analytics')
+@Throttle({ default: { limit: 180, ttl: 60_000 } })
 export class AnalyticsController {
-  constructor(private readonly analytics: AnalyticsService) {}
+  constructor(
+    private readonly analytics: AnalyticsService,
+    private readonly propertyAccess: PropertyAccessService,
+  ) {}
 
-  /** Quick check that charts routes are registered (GET /api/analytics). */
   @Get()
-  ping() {
+  routes() {
     return {
       ok: true,
       routes: ['summary', 'timeseries', 'by-property', 'by-channel', 'period-bounds'],
@@ -30,7 +23,9 @@ export class AnalyticsController {
   }
 
   @Get('period-bounds')
-  periodBounds(@Query() query: SummaryQueryDto) {
+  async periodBounds(@Query() query: AnalyticsQueryDto, @CurrentUser() user: JwtUser) {
+    this.propertyAccess.assertPortfolioScope(user, query.propertyId);
+    await this.propertyAccess.assertPropertyAccess(user, query.propertyId);
     return this.analytics.getPeriodBounds({
       propertyId: query.propertyId,
       from: query.from,
@@ -39,7 +34,9 @@ export class AnalyticsController {
   }
 
   @Get('summary')
-  summary(@Query() query: SummaryQueryDto) {
+  async summary(@Query() query: AnalyticsQueryDto, @CurrentUser() user: JwtUser) {
+    this.propertyAccess.assertPortfolioScope(user, query.propertyId);
+    await this.propertyAccess.assertPropertyAccess(user, query.propertyId);
     return this.analytics.getSummary({
       propertyId: query.propertyId,
       from: query.from,
@@ -48,7 +45,9 @@ export class AnalyticsController {
   }
 
   @Get('timeseries')
-  timeseries(@Query() query: SummaryQueryDto) {
+  async timeseries(@Query() query: AnalyticsQueryDto, @CurrentUser() user: JwtUser) {
+    this.propertyAccess.assertPortfolioScope(user, query.propertyId);
+    await this.propertyAccess.assertPropertyAccess(user, query.propertyId);
     return this.analytics.getTimeseries({
       propertyId: query.propertyId,
       from: query.from,
@@ -57,16 +56,23 @@ export class AnalyticsController {
   }
 
   @Get('by-property')
-  byProperty(@Query() query: SummaryQueryDto) {
-    return this.analytics.getPropertyBreakdown({
+  async byProperty(@Query() query: AnalyticsQueryDto, @CurrentUser() user: JwtUser) {
+    this.propertyAccess.assertPortfolioScope(user, query.propertyId);
+    await this.propertyAccess.assertPropertyAccess(user, query.propertyId);
+    const rows = await this.analytics.getPropertyBreakdown({
       propertyId: query.propertyId,
       from: query.from,
       to: query.to,
     });
+    const allowed = await this.propertyAccess.allowedPropertyIds(user);
+    if (allowed === 'all') return rows;
+    return rows.filter((r) => allowed.has(r.propertyId));
   }
 
   @Get('by-channel')
-  byChannel(@Query() query: SummaryQueryDto) {
+  async byChannel(@Query() query: AnalyticsQueryDto, @CurrentUser() user: JwtUser) {
+    this.propertyAccess.assertPortfolioScope(user, query.propertyId);
+    await this.propertyAccess.assertPropertyAccess(user, query.propertyId);
     return this.analytics.getChannelBreakdown({
       propertyId: query.propertyId,
       from: query.from,

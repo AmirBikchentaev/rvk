@@ -1,0 +1,19 @@
+# Use when reflexive (or host) nginx already owns :80 / :443.
+# Start: docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml up -d --build
+#
+# Then point reflexive nginx to:
+#   web → http://127.0.0.1:${VILLA_WEB_PORT:-3002}
+#   API → http://127.0.0.1:${VILLA_API_PORT:-4002}/api/
+
+services:
+  nginx:
+    profiles: ['never-start']
+    entrypoint: ['true']
+
+  web:
+    ports:
+      - '127.0.0.1:${VILLA_WEB_PORT:-3002}:3000'
+
+  api:
+    ports:
+      - '127.0.0.1:${VILLA_API_PORT:-4002}:4000'

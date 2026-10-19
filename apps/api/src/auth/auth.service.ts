@@ -53,7 +53,12 @@ export class AuthService {
 
   private async issueTokens(user: UserEntity) {
     const accessToken = await this.jwt.signAsync(
-      { sub: user.id, email: user.email, role: user.role },
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        ownerId: user.ownerId ?? null,
+      },
       { expiresIn: process.env.JWT_ACCESS_TTL ?? '15m' },
     );
     const refreshToken = randomBytes(48).toString('hex');

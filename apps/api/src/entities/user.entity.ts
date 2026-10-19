@@ -13,4 +13,8 @@ export class UserEntity {
 
   @Column({ default: 'viewer' })
   role!: string;
+
+  /** When role=owner, limits portfolio to properties with this owner_id. */
+  @Column({ name: 'owner_id', nullable: true, type: 'varchar' })
+  ownerId?: string | null;
 }

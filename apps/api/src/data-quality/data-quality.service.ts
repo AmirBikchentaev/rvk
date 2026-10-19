@@ -1,11 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { dedupeReservations, scanDataQuality, type ReservationRow } from '@villa/shared';
+import {
+  dedupeReservations,
+  scanDataQuality,
+  type DataQualityIssue,
+  type ReservationRow,
+} from '@villa/shared';
 import { loadCsv } from '../import/csv-loader';
+import type { JwtUser } from '../auth/auth.types';
+import { PropertyAccessService } from '../auth/property-access.service';
 
 @Injectable()
 export class DataQualityService {
+  constructor(private readonly propertyAccess: PropertyAccessService) {}
+
   private dataDir(): string {
     return process.env.DATA_DIR ?? join(process.cwd(), '..', '..', 'data');
   }
@@ -74,5 +83,35 @@ export class DataQualityService {
       droppedDuplicateReservationRows: droppedDuplicateIds,
       issues,
     };
+  }
+
+  async filterIssuesForUser(
+    payload: Awaited<ReturnType<DataQualityService['listIssues']>>,
+    user: JwtUser,
+  ) {
+    const allowed = await this.propertyAccess.allowedPropertyIds(user);
+    if (allowed === 'all') return payload;
+
+    const issues = payload.issues.filter((issue) =>
+      this.issueTouchesAllowedProperty(issue, allowed),
+    );
+    return {
+      ...payload,
+      issueCount: issues.length,
+      total: issues.length,
+      issues,
+    };
+  }
+
+  private issueTouchesAllowedProperty(
+    issue: DataQualityIssue,
+    allowed: Set<string>,
+  ): boolean {
+    const pid =
+      issue.params && 'propertyId' in issue.params
+        ? String((issue.params as { propertyId?: string }).propertyId ?? '')
+        : '';
+    if (pid && allowed.has(pid)) return true;
+    return false;
   }
 }

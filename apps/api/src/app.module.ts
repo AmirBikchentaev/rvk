@@ -17,6 +17,9 @@ import { UserEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { ImportBootstrapService } from './import/import-bootstrap.service';
 import { AssistantModule } from './assistant/assistant.module';
+import { HealthModule } from './health/health.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { RolesGuard } from './auth/roles.guard';
 
 @Module({
   imports: [
@@ -47,9 +50,12 @@ import { AssistantModule } from './assistant/assistant.module';
     DataQualityModule,
     AuthModule,
     AssistantModule,
+    HealthModule,
   ],
   providers: [
     ImportBootstrapService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
