@@ -1,0 +1,83 @@
+# Isolated from other stacks (e.g. reflexive on :3000/:3001 and 127.0.0.1:5433).
+# Project name → network/volume prefix: villa-finance_*
+name: villa-finance
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: villa-finance-postgres
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5434}:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-villa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-villa_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-villa_finance}
+    volumes:
+      - villa-finance-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-villa}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: villa-finance-redis
+    profiles: ['full']
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: villa-finance-api
+    expose:
+      - '4000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-villa}:${POSTGRES_PASSWORD:-villa_secret}@postgres:5432/${POSTGRES_DB:-villa_finance}
+      DATA_DIR: /app/data
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1}
+      PORT: 4000
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+    container_name: villa-finance-web
+    expose:
+      - '3000'
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      HOSTNAME: '0.0.0.0'
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: villa-finance-nginx
+    ports:
+      - '${HTTP_PORT:-8080}:80'
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+volumes:
+  villa-finance-pgdata:
