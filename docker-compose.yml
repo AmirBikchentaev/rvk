@@ -62,6 +62,8 @@ services:
       - '3000'
     environment:
       NODE_ENV: production
+      # Runtime API URL for browser (no web rebuild when only .env changes)
+      API_PUBLIC_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4002/api}
       NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN: ${NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN:-false}
       PORT: '3000'
       HOSTNAME: '0.0.0.0'

@@ -1,17 +1,6 @@
-/**
- * Browser: always same-origin `/api` (nginx in Docker, Next rewrites in dev).
- * Override only for unusual setups: NEXT_PUBLIC_API_URL=http://127.0.0.1:4000/api
- */
-export function getApiBase(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, '');
-  if (typeof window !== 'undefined') {
-    if (configured?.startsWith('http://') || configured?.startsWith('https://')) {
-      return configured;
-    }
-    return `${window.location.origin}/api`;
-  }
-  return configured || 'http://127.0.0.1:4000/api';
-}
+import { getApiBase } from '@/lib/api-base';
+
+export { getApiBase };
 
 type Tokens = { accessToken: string; refreshToken: string };
 
@@ -73,7 +62,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   } catch (e) {
     const hint =
       typeof window !== 'undefined'
-        ? ` (${window.location.origin}/api — проверьте, что API/nginx запущены)`
+        ? ` (${getApiBase()} — проверьте API на :4002 и CORS_ORIGIN в .env)`
         : '';
     throw new Error(`Failed to fetch${hint}: ${e instanceof Error ? e.message : String(e)}`);
   }

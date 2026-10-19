@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { ApiRuntimeConfig } from '@/components/api-runtime-config';
 import { DEFAULT_THEME } from '@/lib/theme';
 import './globals.css';
 
@@ -41,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning data-theme={DEFAULT_THEME}>
       <head>
+        <ApiRuntimeConfig />
         <Script id="theme-init" strategy="beforeInteractive">
           {themeInitScript}
         </Script>
