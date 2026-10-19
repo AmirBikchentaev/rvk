@@ -7,11 +7,14 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
-RUN pnpm install --frozen-lockfile || pnpm install
+# Flat node_modules for production COPY (pnpm symlinks break in slim runner)
+RUN echo "node-linker=hoisted" > .npmrc \
+  && pnpm install --frozen-lockfile || pnpm install
 
 FROM base AS build
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/.npmrc ./.npmrc
 COPY packages ./packages
 COPY apps ./apps
 COPY data ./data
