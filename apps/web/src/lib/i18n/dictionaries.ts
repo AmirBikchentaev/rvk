@@ -127,6 +127,8 @@ const ru = {
   suggest2: 'Почему cash и accrual не сходятся?',
   suggest3: 'Какие проблемы в данных мешают доверять цифрам?',
   suggest4: 'Какая вилла приносит больше всего gross?',
+  authorLabel: 'Автор',
+  authorContact: 'Telegram',
 };
 
 const en: typeof ru = {
@@ -254,6 +256,8 @@ const en: typeof ru = {
   suggest2: 'Why do cash and accrual differ?',
   suggest3: 'Which data issues should I trust least?',
   suggest4: 'Which villa has the highest gross?',
+  authorLabel: 'Author',
+  authorContact: 'Telegram',
 };
 
 export const dictionaries = { ru, en };

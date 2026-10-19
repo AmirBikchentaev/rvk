@@ -1,9 +1,16 @@
 'use client';
 
 import { getDeliverablesDoc } from '@/lib/deliverables-content';
+import {
+  AUTHOR_GITHUB_URL,
+  AUTHOR_TELEGRAM_HANDLE,
+  AUTHOR_TELEGRAM_URL,
+} from '@/lib/site-meta';
 import type { Locale } from '@/lib/i18n/locale';
+import { useLocale } from '@/components/locale-provider';
 
 export function DeliverablesReport({ locale }: { locale: Locale }) {
+  const { t } = useLocale();
   const doc = getDeliverablesDoc(locale);
 
   return (
@@ -11,6 +18,17 @@ export function DeliverablesReport({ locale }: { locale: Locale }) {
       <header className="max-w-3xl">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">{doc.pageTitle}</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{doc.pageLead}</p>
+        <p className="mt-3 text-sm text-[var(--text-muted)]">
+          {t.authorLabel}:{' '}
+          <a href={AUTHOR_GITHUB_URL} className="vf-link" target="_blank" rel="noopener noreferrer">
+            github.com/AmirBikchentaev/rvk
+          </a>
+          {' · '}
+          {t.authorContact}:{' '}
+          <a href={AUTHOR_TELEGRAM_URL} className="vf-link" target="_blank" rel="noopener noreferrer">
+            {AUTHOR_TELEGRAM_HANDLE}
+          </a>
+        </p>
       </header>
 
       {doc.sections.map((section) => (

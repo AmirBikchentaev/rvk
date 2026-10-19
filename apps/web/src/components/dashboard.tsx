@@ -9,6 +9,7 @@ import { AnalyticsCharts } from '@/components/analytics-charts';
 import { FinanceAssistant } from '@/components/finance-assistant';
 import { ClientOnboarding } from '@/components/client-onboarding';
 import { DeliverablesReport } from '@/components/deliverables-report';
+import { SiteFooter } from '@/components/site-footer';
 import { DashboardNav, type DashboardSection } from '@/components/dashboard-nav';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeSwitcher } from '@/components/theme-switcher';
@@ -340,6 +341,8 @@ export function Dashboard() {
           </section>
         )}
       </div>
+
+      <SiteFooter />
     </div>
   );
 }

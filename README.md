@@ -174,3 +174,8 @@ docker-compose.yml
 ```
 
 Схема системы: [docs/architecture.md](./docs/architecture.md).
+
+## Автор
+
+- Репозиторий: [github.com/AmirBikchentaev/rvk](https://github.com/AmirBikchentaev/rvk)
+- Telegram: [@sefrwea](https://t.me/sefrwea)
