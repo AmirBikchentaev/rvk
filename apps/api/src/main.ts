@@ -36,7 +36,15 @@ async function bootstrap() {
         callback(null, true);
         return;
       }
-      callback(null, process.env.NODE_ENV !== 'production');
+      // Demo deploy: allow browser on :8080 when CORS_ORIGIN still localhost
+      if (
+        process.env.NODE_ENV === 'production' &&
+        /^https?:\/\/[\d.a-z-]+(:\d+)?$/i.test(requestOrigin)
+      ) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
     },
     credentials: true,
   });

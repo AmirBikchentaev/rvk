@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { DataQualityService } from '../data-quality/data-quality.service';
@@ -17,6 +17,7 @@ const SYSTEM_PROMPT = `Ты senior finance analyst по портфелю вил�
 
 @Injectable()
 export class AssistantService {
+  private readonly log = new Logger(AssistantService.name);
   private readonly openai: OpenAI | null;
 
   constructor(
@@ -47,6 +48,25 @@ export class AssistantService {
       return this.offlineExplain(input.message, defaults, replyLocale);
     }
 
+    try {
+      return await this.chatWithOpenAi(input.message, defaults, replyLocale);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.log.warn(`OpenAI assistant failed, falling back to offline: ${msg}`);
+      const offline = await this.offlineExplain(input.message, defaults, replyLocale);
+      const prefix =
+        replyLocale === 'en'
+          ? `_OpenAI unavailable (${msg}). Offline summary:_\n\n`
+          : `_OpenAI недоступен (${msg}). Offline-сводка:_\n\n`;
+      return { ...offline, mode: 'offline' as const, reply: prefix + offline.reply };
+    }
+  }
+
+  private async chatWithOpenAi(
+    message: string,
+    defaults: { from: string; to: string; propertyId?: string },
+    replyLocale: 'ru' | 'en',
+  ) {
     const model = process.env.OPENAI_MODEL ?? DEFAULT_MODEL;
     const localeHint =
       replyLocale === 'en'
@@ -57,13 +77,13 @@ export class AssistantService {
       { role: 'system', content: `${SYSTEM_PROMPT}\n\n${localeHint}` },
       {
         role: 'user',
-        content: `Context filters: from=${defaults.from}, to=${defaults.to}, propertyId=${defaults.propertyId ?? 'all'}.\n\nUser: ${input.message}`,
+        content: `Context filters: from=${defaults.from}, to=${defaults.to}, propertyId=${defaults.propertyId ?? 'all'}.\n\nUser: ${message}`,
       },
     ];
 
     const toolCallsLog: { name: string; args: unknown }[] = [];
     for (let step = 0; step < 5; step++) {
-      const completion = await this.openai.chat.completions.create({
+      const completion = await this.openai!.chat.completions.create({
         model,
         messages,
         tools: ASSISTANT_TOOLS,

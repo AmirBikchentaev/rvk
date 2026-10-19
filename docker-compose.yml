@@ -43,8 +43,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1}
       PORT: 4000
-    volumes:
-      - ./data:/app/data:ro
+    # CSV baked into API image (/app/data). To override from host, add:
+    # volumes: ['${PWD}/data:/app/data:ro']  — folder must contain all *.csv
     depends_on:
       postgres:
         condition: service_healthy

@@ -21,12 +21,21 @@ export class ImportService {
     private readonly rules: Repository<CommissionRuleEntity>,
   ) {}
 
-  async importFromDirectory(dataDir: string): Promise<{ importedAt: string }> {
-    await this.properties.clear();
+  async importFromDirectory(dataDir: string): Promise<{
+    importedAt: string;
+    counts: {
+      properties: number;
+      reservations: number;
+      payments: number;
+      expenses: number;
+      commissionRules: number;
+    };
+  }> {
     await this.reservations.clear();
     await this.payments.clear();
     await this.expenses.clear();
     await this.rules.clear();
+    await this.properties.clear();
 
     const props = loadCsv(dataDir, 'properties.csv').map((r) => ({
       propertyId: r.property_id,
@@ -106,6 +115,15 @@ export class ImportService {
     }));
     await this.rules.save(rules);
 
-    return { importedAt: new Date().toISOString() };
+    return {
+      importedAt: new Date().toISOString(),
+      counts: {
+        properties: props.length,
+        reservations: deduped.length,
+        payments: pays.length,
+        expenses: exps.length,
+        commissionRules: rules.length,
+      },
+    };
   }
 }
