@@ -5,6 +5,7 @@ import {
   computeChannelBreakdown,
   computeDatasetDateBounds,
   computeFinancialSummary,
+  computeKpiBreakdown,
   computePropertyBreakdown,
   computeTimeseries,
   dedupeReservations,
@@ -97,6 +98,28 @@ export class AnalyticsService {
     const filters = await this.resolveFilters(partial);
     const ctx = await this.loadContext();
     return computeFinancialSummary({ filters, ...ctx });
+  }
+
+  async getKpiBreakdown(partial: {
+    propertyId?: string;
+    from?: string;
+    to?: string;
+  }) {
+    const filters = await this.resolveFilters(partial);
+    const properties = (await this.properties.find()).map(mapProperty);
+    const validPropertyIds = new Set(properties.map((p) => p.propertyId));
+    const rawRes = (await this.reservations.find()).map(mapReservation);
+    const { reservations } = dedupeReservations(rawRes);
+    return computeKpiBreakdown({
+      filters,
+      properties,
+      validPropertyIds,
+      reservations,
+      reservationsRaw: rawRes,
+      payments: (await this.payments.find()).map(mapPayment),
+      expenses: (await this.expenses.find()).map(mapExpense),
+      commissionRules: (await this.rules.find()).map(mapRule),
+    });
   }
 
   async getTimeseries(partial: { propertyId?: string; from?: string; to?: string }) {

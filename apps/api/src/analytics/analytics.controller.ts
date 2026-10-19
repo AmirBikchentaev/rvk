@@ -16,7 +16,7 @@ export class AnalyticsController {
   routes() {
     return {
       ok: true,
-      routes: ['summary', 'timeseries', 'by-property', 'by-channel', 'period-bounds'],
+      routes: ['summary', 'kpi-breakdown', 'timeseries', 'by-property', 'by-channel', 'period-bounds'],
     };
   }
 
@@ -34,6 +34,16 @@ export class AnalyticsController {
   async summary(@Query() query: AnalyticsQueryDto) {
     await this.properties.assertKnownProperty(query.propertyId);
     return this.analytics.getSummary({
+      propertyId: query.propertyId,
+      from: query.from,
+      to: query.to,
+    });
+  }
+
+  @Get('kpi-breakdown')
+  async kpiBreakdown(@Query() query: AnalyticsQueryDto) {
+    await this.properties.assertKnownProperty(query.propertyId);
+    return this.analytics.getKpiBreakdown({
       propertyId: query.propertyId,
       from: query.from,
       to: query.to,

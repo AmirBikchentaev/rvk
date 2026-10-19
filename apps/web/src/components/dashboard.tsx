@@ -1,6 +1,6 @@
 'use client';
 
-import type { DataQualityIssue, FinancialSummary, PropertyRow } from '@villa/shared';
+import type { DataQualityIssue, FinancialSummary, KpiBreakdown, PropertyRow } from '@villa/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch, ensureDemoSession } from '@/lib/api/client';
@@ -10,6 +10,7 @@ import { FinanceAssistant } from '@/components/finance-assistant';
 import { ClientOnboarding } from '@/components/client-onboarding';
 import { FinanceMethodology, MethodologyTeaser } from '@/components/finance-methodology';
 import { KpiAssignmentChecklist } from '@/components/kpi-assignment-checklist';
+import { KpiCalculationWalkthrough } from '@/components/kpi-calculation-walkthrough';
 import { DeliverablesReport } from '@/components/deliverables-report';
 import { SiteFooter } from '@/components/site-footer';
 import { DashboardNav, type DashboardSection } from '@/components/dashboard-nav';
@@ -30,6 +31,8 @@ type PeriodBounds = {
   appliedTo: string;
   usingCustomRange: boolean;
 };
+
+const SECTIONS_WITH_FILTERS: DashboardSection[] = ['overview', 'charts', 'assistant'];
 
 type DqResponse = {
   issueCount?: number;
@@ -101,6 +104,12 @@ export function Dashboard() {
     queryFn: () => apiFetch<FinancialSummary>(`/analytics/summary${analyticsSuffix}`),
   });
 
+  const kpiBreakdownQuery = useQuery({
+    queryKey: ['kpi-breakdown', propertyId, useCustomPeriod, from, to],
+    queryFn: () => apiFetch<KpiBreakdown>(`/analytics/kpi-breakdown${analyticsSuffix}`),
+    enabled: section === 'overview',
+  });
+
   const dqQuery = useQuery({
     queryKey: ['dq'],
     queryFn: () => apiFetch<DqResponse>('/data-quality/issues'),
@@ -145,6 +154,13 @@ export function Dashboard() {
     ? `${periodQuery.data.appliedFrom} — ${periodQuery.data.appliedTo}`
     : null;
 
+  const showFilters = SECTIONS_WITH_FILTERS.includes(section);
+
+  const selectedProperty = propertiesQuery.data?.find((p) => p.propertyId === propertyId);
+  const propertyLabel = selectedProperty
+    ? `${selectedProperty.propertyId} — ${selectedProperty.propertyName}`
+    : propertyId || t.allProperties;
+
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-6 pb-10 pt-6">
       <ClientOnboarding t={t} onReplayRef={(fn) => { openOnboardingRef.current = fn; }} />
@@ -175,6 +191,7 @@ export function Dashboard() {
         dataIssueHint={`${issueCount} ${t.dqIssueLabel}`}
       />
 
+      {showFilters ? (
       <section className="vf-panel-muted mb-4 mt-4 space-y-3 p-4">
         <h2 className="text-sm font-medium text-[var(--text-primary)]">{t.filters}</h2>
         <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
@@ -255,22 +272,14 @@ export function Dashboard() {
           )}
         </div>
       </section>
+      ) : null}
 
-      <div className="mt-2">
+      <div className={showFilters ? 'mt-2' : 'mt-4'}>
         {section === 'methodology' && <FinanceMethodology locale={locale} />}
 
         {section === 'overview' && (
           <div className="space-y-4">
             <KpiAssignmentChecklist t={t} />
-            <MethodologyTeaser
-              locale={locale}
-              onOpen={() => setSection('methodology')}
-              labels={{
-                title: t.methodologyTeaserTitle,
-                body: t.methodologyTeaserBody,
-                link: t.methodologyTeaserLink,
-              }}
-            />
             {summaryQuery.isLoading && <p className="text-[var(--text-secondary)]">{t.loading}</p>}
             {summaryQuery.isError && <p className="text-red-600">{t.error}</p>}
             {summary && (
@@ -291,6 +300,29 @@ export function Dashboard() {
                   <MetricCard label={t.accrualNet} value={formatIdr(summary.accrualNetBooking)} />
                   <MetricCard label={t.cashGap} value={formatIdr(summary.cashVsAccrualGap)} />
                 </div>
+                {kpiBreakdownQuery.isLoading && (
+                  <p className="text-sm text-[var(--text-muted)]">{t.kpiBreakLoading}</p>
+                )}
+                {kpiBreakdownQuery.isError && (
+                  <p className="text-sm text-red-600">{t.kpiBreakError}</p>
+                )}
+                {kpiBreakdownQuery.data ? (
+                  <KpiCalculationWalkthrough
+                    breakdown={kpiBreakdownQuery.data}
+                    t={t}
+                    intlLocale={intlLocale}
+                    propertyLabel={propertyLabel}
+                  />
+                ) : null}
+                <MethodologyTeaser
+                  locale={locale}
+                  onOpen={() => setSection('methodology')}
+                  labels={{
+                    title: t.methodologyTeaserTitle,
+                    body: t.methodologyTeaserBody,
+                    link: t.methodologyTeaserLink,
+                  }}
+                />
               </>
             )}
           </div>
