@@ -50,6 +50,11 @@ function fmtShort(n: number) {
   return String(n);
 }
 
+function fmtTooltipValue(value: unknown): string {
+  const n = typeof value === 'number' ? value : Number(value);
+  return fmtShort(Number.isFinite(n) ? n : 0);
+}
+
 /** Measures its own column — do not reuse parent grid width (fixes pie chart offset). */
 function ChartSlot({ children }: { children: (width: number) => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -324,7 +329,7 @@ export function AnalyticsCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
                   <XAxis dataKey="period" tick={{ fontSize: 12, fill: chart.tick }} />
                   <YAxis tickFormatter={fmtShort} tick={{ fontSize: 12, fill: chart.tick }} width={56} />
-                  <Tooltip formatter={(v: number) => fmtShort(Number(v))} />
+                  <Tooltip formatter={fmtTooltipValue} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -373,7 +378,7 @@ export function AnalyticsCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
                   <XAxis type="number" tickFormatter={fmtShort} tick={{ fill: chart.tick }} />
                   <YAxis type="category" dataKey="name" width={52} tick={{ fontSize: 11, fill: chart.tick }} />
-                  <Tooltip formatter={(v: number) => fmtShort(Number(v))} />
+                  <Tooltip formatter={fmtTooltipValue} />
                   <Legend />
                   <Bar dataKey="gross" name={labels.gross} fill={chart.gross} radius={[0, 4, 4, 0]} />
                   <Bar dataKey="owner" name={labels.ownerEst} fill={chart.owner} radius={[0, 4, 4, 0]} />
@@ -412,7 +417,7 @@ export function AnalyticsCharts({
                         <Cell key={i} fill={chart.pie[i % chart.pie.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => fmtShort(Number(v))} />
+                    <Tooltip formatter={fmtTooltipValue} />
                     <Legend
                       verticalAlign="bottom"
                       align="center"
