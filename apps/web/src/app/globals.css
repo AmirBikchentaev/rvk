@@ -221,7 +221,7 @@ textarea {
   }
 
   .vf-formula-expr {
-    @apply mt-3 rounded-lg border border-[var(--border)]/80 bg-[var(--bg-surface)] px-3 py-2.5 text-center font-mono text-[13px] leading-snug tracking-tight text-[var(--text-primary)];
+    @apply mt-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 text-center font-mono text-[13px] leading-snug tracking-tight text-[var(--text-primary)];
   }
 
   html[data-theme='light'] .vf-formula-expr {
@@ -245,7 +245,7 @@ textarea {
   }
 
   .vf-formula-callout {
-    @apply rounded-xl border border-dashed border-[var(--accent)]/50 bg-[var(--accent-soft)]/40;
+    @apply rounded-xl border border-dashed border-[var(--accent)] bg-[var(--accent-soft)];
   }
 
   html[data-theme='light'] .vf-formula-callout {
