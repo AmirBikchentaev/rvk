@@ -1,6 +1,6 @@
 'use client';
 
-import type { FinancialSummary, PropertyRow } from '@villa/shared';
+import type { DataQualityIssue, FinancialSummary, PropertyRow } from '@villa/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch, ensureDemoSession } from '@/lib/api/client';
@@ -38,7 +38,7 @@ type DqResponse = {
     payments: number;
     expenses: number;
   };
-  issues: { code: string; severity: string; entityId: string; message: string }[];
+  issues: DataQualityIssue[];
 };
 
 function MetricCard({ label, value }: { label: string; value: string }) {
