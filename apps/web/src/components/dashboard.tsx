@@ -8,6 +8,7 @@ import { buildAnalyticsQuery } from '@/lib/analytics-query';
 import { AnalyticsCharts } from '@/components/analytics-charts';
 import { FinanceAssistant } from '@/components/finance-assistant';
 import { ClientOnboarding } from '@/components/client-onboarding';
+import { DeliverablesReport } from '@/components/deliverables-report';
 import { DashboardNav, type DashboardSection } from '@/components/dashboard-nav';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeSwitcher } from '@/components/theme-switcher';
@@ -301,6 +302,8 @@ export function Dashboard() {
             to={useCustomPeriod ? to : undefined}
           />
         )}
+
+        {section === 'deliverables' && <DeliverablesReport locale={locale} />}
 
         {section === 'data' && (
           <section>
