@@ -8,6 +8,8 @@ import { buildAnalyticsQuery } from '@/lib/analytics-query';
 import { AnalyticsCharts } from '@/components/analytics-charts';
 import { FinanceAssistant } from '@/components/finance-assistant';
 import { ClientOnboarding } from '@/components/client-onboarding';
+import { FinanceMethodology, MethodologyTeaser } from '@/components/finance-methodology';
+import { KpiAssignmentChecklist } from '@/components/kpi-assignment-checklist';
 import { DeliverablesReport } from '@/components/deliverables-report';
 import { SiteFooter } from '@/components/site-footer';
 import { DashboardNav, type DashboardSection } from '@/components/dashboard-nav';
@@ -255,8 +257,20 @@ export function Dashboard() {
       </section>
 
       <div className="mt-2">
+        {section === 'methodology' && <FinanceMethodology locale={locale} />}
+
         {section === 'overview' && (
           <div className="space-y-4">
+            <KpiAssignmentChecklist t={t} />
+            <MethodologyTeaser
+              locale={locale}
+              onOpen={() => setSection('methodology')}
+              labels={{
+                title: t.methodologyTeaserTitle,
+                body: t.methodologyTeaserBody,
+                link: t.methodologyTeaserLink,
+              }}
+            />
             {summaryQuery.isLoading && <p className="text-[var(--text-secondary)]">{t.loading}</p>}
             {summaryQuery.isError && <p className="text-red-600">{t.error}</p>}
             {summary && (

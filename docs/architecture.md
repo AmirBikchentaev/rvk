@@ -1,5 +1,13 @@
 # Architecture (target state)
 
+Соответствие **заданию п.4**: источники → загрузка → проверка и хранение → расчёты → Dashboard. В UI: вкладка **«Отчёт по тестовому заданию»**, §4 (re-import, audit, RBAC).
+
+| Тема | Production | Прототип |
+|------|------------|----------|
+| Re-import без дублей | Upsert по natural keys + `import_runs` | Dedupe + full reload CSV |
+| Audit | `financial_events`, diff per import | Import logs, DQ flags |
+| Доступ | RBAC + RLS по `owner_id` | Demo API, optional JWT |
+
 ```mermaid
 flowchart LR
   subgraph sources [Sources]

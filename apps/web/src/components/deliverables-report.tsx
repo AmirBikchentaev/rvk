@@ -9,6 +9,8 @@ import {
 } from '@/lib/site-meta';
 import type { Locale } from '@/lib/i18n/locale';
 import { useLocale } from '@/components/locale-provider';
+import { AccrualCashCompare, FormulaGrid } from '@/components/formula-cards';
+import { getMethodologyFormulas } from '@/lib/methodology-content';
 
 export function DeliverablesReport({ locale }: { locale: Locale }) {
   const { t } = useLocale();
@@ -49,6 +51,18 @@ export function DeliverablesReport({ locale }: { locale: Locale }) {
               <p key={i}>{p}</p>
             ))}
           </div>
+          {section.id === 'finance' ? (
+            <>
+              <AccrualCashCompare t={t} />
+              <FormulaGrid items={getMethodologyFormulas(locale)} t={t} />
+              <div className="vf-formula-callout mt-4 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+                  {t.formulaChartsTitle}
+                </p>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">{t.periodChartsLogic}</p>
+              </div>
+            </>
+          ) : null}
           {section.bullets?.length ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
               {section.bullets.map((item) => (
@@ -58,6 +72,11 @@ export function DeliverablesReport({ locale }: { locale: Locale }) {
           ) : null}
           {section.table ? (
             <div className="mt-4 overflow-x-auto">
+              {section.id === 'finance' ? (
+                <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">
+                  {t.deliverablesFinanceTableCaption}
+                </p>
+              ) : null}
               <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[var(--text-primary)]">
@@ -83,6 +102,13 @@ export function DeliverablesReport({ locale }: { locale: Locale }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : null}
+          {section.paragraphsAfterTable?.length ? (
+            <div className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+              {section.paragraphsAfterTable.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
           ) : null}
           {section.diagram?.length ? (

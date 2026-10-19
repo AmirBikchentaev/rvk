@@ -5,6 +5,7 @@ export type DeliverablesSection = {
   title: string;
   lead?: string;
   paragraphs: string[];
+  paragraphsAfterTable?: string[];
   bullets?: string[];
   table?: { headers: [string, string, string]; rows: [string, string, string][] };
   diagram?: string[];
@@ -21,18 +22,31 @@ export type DeliverablesDoc = {
 const ru: DeliverablesDoc = {
   pageTitle: 'Отчёт по тестовому заданию',
   pageLead:
-    'Это отчёт по тестовому заданию Senior Business Systems Engineer (Finance & Automation). От кандидата ожидались: работающий прототип, объяснение финансовой логики, найденные ошибки в данных и схема дальнейшей архитектуры — ниже кратко по каждому пункту.',
+    'Это отчёт по тестовому заданию Senior Business Systems Engineer (Finance & Automation): dashboard (§1), методология (§2 + вкладка «Методология»), качество данных (§3), архитектура с re-import/audit/RBAC (§4).',
   sections: [
     {
       id: 'prototype',
-      title: '1. Работающий прототип',
-      lead: 'Архитектура решения и как проверить',
+      title: '1. Dashboard — работающий прототип',
+      lead: 'Соответствие формулировке задания (фильтры + KPI + accrual vs cash)',
       paragraphs: [
-        'Монорепо pnpm workspaces (`apps/api`, `apps/web`, `packages/shared`). Общая доменная логика (формулы accrual/cash, dedupe броней, скан DQ) живёт в `@villa/shared`, чтобы dashboard, API и проверки не расходились в цифрах.',
-        'Backend (NestJS): модули `import` (CSV → TypeORM), `analytics` (KPI, timeseries, разрезы), `data-quality` (скан CSV для флагов), `assistant` (OpenAI tools → те же сервисы), `properties`, опциональный `auth`. При старте `ImportBootstrapService` заливает CSV из `DATA_DIR` (/app/data в Docker) в PostgreSQL; схема через `synchronize: true` (прототип).',
-        'Frontend (Next.js App Router): dashboard на React Query — фильтры объекта/периода, вкладки KPI · графики · AI · качество данных · отчёт; RU/EN, светлая/тёмная тема. Браузер ходит на same-origin `/api/*` (nginx → Nest).',
-        'Деплой: Docker Compose — `postgres`, `api`, `web`, `nginx` (публичный `:8080`). CSV в образе API; KPI и графики читают таблицы фактов, не CSV на каждый запрос (DQ для вкладки «Данные» сканирует файлы).',
-        'Проверка: `:8080` — KPI и объекты в фильтре, `/api/health` с `propertyCount`, графики и ассистент (OpenAI или offline). Локально: API `:4000`, web `:3002`.',
+        'Минимальный dashboard на вкладке KPI: фильтры объекта и периода управляют `GET /analytics/summary` (и графиками). Период по умолчанию — весь диапазон дат в БД; опционально «Свой период (from / to)».',
+        'Разница начислений и денег: карточки Accrual net booking, Cash received и Cash − accrual (cash минус net booking). Owner balance подписан как оценка; при допущениях — баннер «Расчёт оценочный».',
+      ],
+      table: {
+        headers: ['Требование задания', 'Где в прототипе', 'Как считается'],
+        rows: [
+          ['Фильтр по объекту', 'Блок «Фильтры» + KPI', 'propertyId → summary API'],
+          ['Фильтр по периоду', 'Авто period-bounds + опционально from/to', 'Ночи проживания / payment_date / expense_date'],
+          ['Gross bookings', 'Карточка KPI', 'Σ effective_gross (accrual)'],
+          ['OTA fees', 'Карточка KPI', 'Σ ota_fee, non-cancelled'],
+          ['Management fees', 'Карточка KPI', 'commission_rules × gross на check_in'],
+          ['Операционные расходы', 'Карточка KPI (paid)', 'expenses payment_status=paid'],
+          ['Owner balance (примерный)', 'Карточка + disclaimer', 'net − fee − paid opex, оценка'],
+          ['Начисления vs cash', 'Cash received · Accrual net · Cash − accrual', 'Разные календари → вкладка «Методология»'],
+        ],
+      },
+      paragraphsAfterTable: [
+        'Стек: pnpm monorepo, NestJS + Postgres, Next.js; формулы в `@villa/shared`. Деплой: Docker Compose (UI :8080, API :4002). Проверка: KPI не пустые, фильтр объектов, `/api/health` → propertyCount > 0.',
       ],
       diagram: [
         'Браузер',
@@ -57,12 +71,9 @@ const ru: DeliverablesDoc = {
     {
       id: 'finance',
       title: '2. Финансовая логика',
-      lead: 'Accrual vs cash, период, owner balance',
+      lead: 'Accrual vs cash, период, owner balance — подробно во вкладке «Методология»',
       paragraphs: [
-        'Период: бронь попадает в расчёт, если хотя бы одна ночь пересекается с [from, to] (check-out exclusive). Без дат в query берётся полный диапазон в БД.',
-        'Accrual: gross = effective_gross (confirmed/modified, cancelled → 0); OTA — только non-cancelled, отрицательные исключаются; management fee = gross_effective × rate из commission_rules на check_in; opex — только paid по expense_date; net booking = gross − OTA; owner balance (оценка) = net − mgmt fee − paid opex (не банковский остаток).',
-        'Cash: сумма payments со status=received по payment_date в периоде. Cash − accrual показывает разрыв дат оплаты и проживания (ожидаемо при refunds, отменах, дублях).',
-        'Графики: gross и management fee — по месяцу check-in; cash — по месяцу payment_date, чтобы не смешивать методологии.',
+        'Ниже — те же формулы, что на вкладке «Методология» (и в `packages/shared/finance.ts`). Подробнее про отмены, refunds и пробелы для точного owner balance — там же.',
       ],
       table: {
         headers: ['Показатель', 'Источник', 'Правило'],
@@ -96,36 +107,56 @@ const ru: DeliverablesDoc = {
     },
     {
       id: 'architecture',
-      title: '4. Схема дальнейшей архитектуры',
-      lead: 'От CSV-прототипа к масштабируемому finance stack',
+      title: '4. Архитектура — целевая система',
+      lead: 'Схема потока данных и три обязательных механизма: re-import, audit, доступ',
       paragraphs: [
-        'Ближайший контур (MVP→prod): staging + идемпотентный upsert importers, `import_runs` (hash файла, counts, diff); явная модель owner statement (accrual period vs cash calendar) и reconciliation UI; RBAC по `owner_id`; webhooks OTA/банка вместо ручного CSV.',
-        'Audit & compliance: append-only `financial_events`, версионирование commission rules с effective dating, «закрытые» accounting periods (freeze) — пересчёт KPI только через controlled replay, не правкой фактов задним числом.',
-        'Масштаб чтения: тяжёлые агрегаты (summary, timeseries) — materialized views или snapshot-таблицы по `(property_id, period, formula_version)`; dashboard читает read-model, пересборка — async job после import (CQRS-lite, без оверинжиниринга на старте).',
-        'Надёжность ingestion: outbox + очередь (BullMQ/SQS) для import/recalc; at-least-once доставка, идempotent consumers по natural keys; DLQ для строк с DQ=exclude и алерт в Slack.',
-        'Observability: трассировка import→merge→recalc (OpenTelemetry), метрики lag импорта и расхождения cash vs bank feed; SLO «KPI доступны ≤ N мин после webhook».',
-        'AI-слой: assistant только через typed tools к read-model + lineage («из каких reservation_id сложился gross») — без прямого SQL от модели; rate limit и cost cap per tenant.',
+        'Целевой контур по формулировке задания: источники → загрузка → проверка и хранение → расчёты → Dashboard. Ниже — схема; таблица отвечает на повторный импорт без дублей, аудит изменений и разграничение доступа.',
+        'Сейчас (прототип): CSV в образе API → ImportBootstrap → PostgreSQL → AnalyticsService / `@villa/shared` → Next.js dashboard. Упрощённо: без staging, без полного audit ledger и без prod RBAC.',
       ],
       diagram: [
-        'PMS / OTA · Bank · Ops expenses',
-        '        ↓ webhooks / SFTP / API',
-        'Ingest workers → Validate & DQ → Staging (raw)',
-        '        ↓ transactional merge',
-        'Canonical facts (PG) → Accrual & cash engines',
-        '        ↓ async jobs          ↘ audit / financial_events',
-        'Read models (MV / snapshots) → NestJS REST (+ RBAC)',
+        '① Источники данных',
+        '   PMS / OTA exports · банк / payouts · операционные расходы',
         '        ↓',
-        'Next.js dashboard · exports · owner portal',
+        '② Загрузка',
+        '   Webhooks · SFTP · CSV/API importers · очередь (outbox)',
+        '        ↓',
+        '③ Проверка и хранение',
+        '   Validation & DQ → staging (raw) → merge → canonical PostgreSQL',
+        '        ↘ audit log / import_runs',
+        '        ↓',
+        '④ Расчёты',
+        '   Accrual & cash engines (shared finance.ts) → read-models / snapshots',
+        '        ↓',
+        '⑤ Dashboard',
+        '   NestJS REST (+ RBAC) → Next.js · owner portal · exports',
+      ],
+      table: {
+        headers: ['Требование задания', 'Целевое решение (prod)', 'В прототипе'],
+        rows: [
+          [
+            'Повторный импорт без дублей',
+            'Natural keys (reservation_id+updated_at, payment_id, expense_id); upsert staging→canonical в одной TX; import_runs (file hash, counts, diff); идempotent workers',
+            'Dedupe reservation_id по max(updated_at); duplicate payment_id — один cash; полный reload CSV при старте API',
+          ],
+          [
+            'Аудит изменений',
+            'Append-only financial_events; row-level diff per import_run; кто/когда/что изменил; freeze accounting periods',
+            'Логи import в API; DQ-флаги; нет immutable ledger — задел под import_runs + event table',
+          ],
+          [
+            'Разграничение доступа',
+            'RBAC: owner / finance / ops; RLS в PG по owner_id; scoped API keys; SSO в prod',
+            'Демо API без обязательной auth; validation propertyId; опциональный JWT / demo user',
+          ],
+        ],
+      },
+      paragraphsAfterTable: [
+        'Масштабирование: materialized views для KPI, read replica, Redis-invalidation после import, schema contracts на OTA-файлы. Подробнее: docs/architecture.md. В UI — эта же §4 на вкладке «Отчёт по тестовому заданию».',
       ],
       bullets: [
-        'Natural keys: reservation_id+updated_at, payment_id, expense_id; merge idempotent',
-        'Staging → canonical в одной TX; rollback import_run при failed DQ gate',
-        'FX service: курсы с effective_from, snapshot на дату check-in или payment (policy)',
-        'Кэш Redis для period-bounds/summary с invalidation по import_run_id',
-        'Schema contracts: JSON Schema / dbt tests на OTA export vs staging columns',
-        'Multi-tenant: row-level security в PG или фильтр owner_id в API + отдельные API keys интеграциям',
-        'Horizontal scale: stateless API за LB; Postgres read replica для analytics; write master один',
-        'Explainability: KPI drill-down до строк-источников — must-have для CFO trust',
+        'Сбой DQ gate → rollback import_run, canonical не меняется',
+        'Owner видит только свой portfolio; finance — весь портфель',
+        'KPI drill-down до reservation_id / payment_id',
       ],
     },
   ],
@@ -142,18 +173,31 @@ const ru: DeliverablesDoc = {
 const en: DeliverablesDoc = {
   pageTitle: 'Test assignment report',
   pageLead:
-    'This page is the report for the Senior Business Systems Engineer (Finance & Automation) test assignment: working prototype, financial logic, data issues found, and target architecture — summarized below.',
+    'Test assignment report: dashboard (§1), methodology (§2 + Methodology tab), data quality (§3), architecture with re-import/audit/RBAC (§4).',
   sections: [
     {
       id: 'prototype',
-      title: '1. Working prototype',
-      lead: 'Solution architecture and how to verify',
+      title: '1. Dashboard — working prototype',
+      lead: 'Assignment checklist: filters, KPIs, accrual vs cash',
       paragraphs: [
-        'pnpm workspaces monorepo (`apps/api`, `apps/web`, `packages/shared`). Accrual/cash formulas, reservation dedupe, and DQ scan live in `@villa/shared` so the UI and API stay aligned.',
-        'Backend (NestJS): `import` (CSV → TypeORM), `analytics` (KPI, timeseries, breakdowns), `data-quality` (CSV scan for flags), `assistant` (OpenAI function tools → same services), `properties`, optional `auth`. `ImportBootstrapService` loads CSV from `DATA_DIR` (/app/data in Docker) on startup; schema via `synchronize: true` (prototype).',
-        'Frontend (Next.js App Router): React Query dashboard — property/period filters, tabs for KPI · charts · AI · data quality · report; RU/EN, light/dark. Browser uses same-origin `/api/*` (nginx → Nest).',
-        'Deploy: Docker Compose — `postgres`, `api`, `web`, `nginx` (public `:8080`). CSV baked into the API image; KPIs/charts read fact tables, not CSV per request (DQ tab rescans files).',
-        'Verify: `:8080` — KPIs and property filter populated, `/api/health` shows `propertyCount`, charts and assistant work (OpenAI or offline). Local: API `:4000`, web `:3002`.',
+        'Minimal dashboard on the KPI tab: property and period filters drive `GET /analytics/summary`. Default period = full DB span; optional custom from/to.',
+        'Accrual vs cash: Accrual net booking, Cash received, and Cash − accrual cards. Owner balance labeled as estimate; yellow banner when assumptions apply.',
+      ],
+      table: {
+        headers: ['Assignment requirement', 'In the UI', 'Calculation'],
+        rows: [
+          ['Property filter', 'Filters panel + KPI', 'propertyId → summary API'],
+          ['Period filter', 'Auto period-bounds + optional from/to', 'Stay nights / payment_date / expense_date'],
+          ['Gross bookings', 'KPI card', 'Σ effective_gross (accrual)'],
+          ['OTA fees', 'KPI card', 'Σ ota_fee, non-cancelled'],
+          ['Management fees', 'KPI card', 'commission_rules × gross on check_in'],
+          ['Operational expenses', 'KPI card (paid)', 'expenses payment_status=paid'],
+          ['Owner balance (estimate)', 'KPI card + disclaimer', 'net − fee − paid opex'],
+          ['Accrual vs cash', 'Cash · Accrual net · Cash − accrual', 'Separate calendars → Methodology tab'],
+        ],
+      },
+      paragraphsAfterTable: [
+        'Stack: pnpm monorepo, NestJS + Postgres, Next.js; formulas in `@villa/shared`. Deploy: Docker (UI :8080, API :4002). Verify: non-empty KPIs, property dropdown, `/api/health` propertyCount > 0.',
       ],
       diagram: [
         'Browser',
@@ -178,12 +222,9 @@ const en: DeliverablesDoc = {
     {
       id: 'finance',
       title: '2. Financial logic',
-      lead: 'Accrual vs cash, period, owner balance',
+      lead: 'Accrual vs cash, period, owner balance — full detail on Methodology tab',
       paragraphs: [
-        'Period: a reservation counts if at least one night overlaps [from, to] (check-out exclusive). With no dates in query, the full DB span is used.',
-        'Accrual: gross = effective_gross (confirmed/modified; cancelled → 0); OTA for non-cancelled only, negative fees excluded; management fee = gross_effective × rate from commission_rules on check_in; opex = paid only by expense_date; net booking = gross − OTA; owner balance (estimate) = net − mgmt fee − paid opex (not bank balance).',
-        'Cash: sum of payments with status=received by payment_date in period. Cash − accrual reflects payment vs stay timing (expected with refunds, cancellations, duplicates).',
-        'Charts: gross and management fee by check-in month; cash by payment_date month so methodologies are not mixed.',
+        'Same formulas as the Methodology tab (and `packages/shared/finance.ts`). Cancellations, refunds, and gaps for an exact owner balance — there in full.',
       ],
       table: {
         headers: ['Metric', 'Source', 'Rule'],
@@ -217,36 +258,56 @@ const en: DeliverablesDoc = {
     },
     {
       id: 'architecture',
-      title: '4. Target architecture',
-      lead: 'From CSV prototype to a scalable finance stack',
+      title: '4. Architecture — target system',
+      lead: 'Data-flow schema plus re-import, audit, and access control',
       paragraphs: [
-        'Near-term (MVP→prod): staging + idempotent upsert importers, `import_runs` (file hash, counts, diff); explicit owner statement (accrual period vs cash calendar) and reconciliation UI; RBAC on `owner_id`; OTA/bank webhooks instead of manual CSV.',
-        'Audit & compliance: append-only `financial_events`, versioned commission rules with effective dating, closed accounting periods (freeze) — KPI changes via controlled replay, not silent edits to historical facts.',
-        'Read scaling: heavy aggregates (summary, timeseries) via materialized views or snapshot tables keyed by `(property_id, period, formula_version)`; dashboard reads the read model; rebuild runs async after import (CQRS-lite).',
-        'Ingestion reliability: outbox + queue (BullMQ/SQS) for import/recalc; at-least-once delivery, idempotent consumers on natural keys; DLQ for exclude-level DQ with Slack alerts.',
-        'Observability: trace import→merge→recalc (OpenTelemetry), metrics on import lag and bank vs ledger cash gaps; SLO “KPIs fresh within N minutes of webhook”.',
-        'AI layer: assistant calls typed tools against the read model + lineage (which reservation_ids built gross) — no raw SQL from the model; per-tenant rate limits and cost caps.',
+        'Assignment pipeline: sources → ingestion → validation & storage → calculations → Dashboard. Diagram below; table covers idempotent re-import, change audit, and access boundaries.',
+        'Today (prototype): CSV in API image → ImportBootstrap → PostgreSQL → AnalyticsService / `@villa/shared` → Next.js. Simplified: no staging, no full audit ledger, no production RBAC.',
       ],
       diagram: [
-        'PMS / OTA · Bank · Ops expenses',
-        '        ↓ webhooks / SFTP / API',
-        'Ingest workers → Validate & DQ → Staging (raw)',
-        '        ↓ transactional merge',
-        'Canonical facts (PG) → Accrual & cash engines',
-        '        ↓ async jobs          ↘ audit / financial_events',
-        'Read models (MV / snapshots) → NestJS REST (+ RBAC)',
+        '① Data sources',
+        '   PMS / OTA · bank / payouts · operational expenses',
         '        ↓',
-        'Next.js dashboard · exports · owner portal',
+        '② Ingestion',
+        '   Webhooks · SFTP · CSV/API importers · queue (outbox)',
+        '        ↓',
+        '③ Validation & storage',
+        '   DQ rules → staging → merge → canonical PostgreSQL',
+        '        ↘ audit log / import_runs',
+        '        ↓',
+        '④ Calculations',
+        '   Accrual & cash engines (shared finance.ts) → read-models',
+        '        ↓',
+        '⑤ Dashboard',
+        '   NestJS REST (+ RBAC) → Next.js · owner portal · exports',
+      ],
+      table: {
+        headers: ['Assignment topic', 'Production design', 'In prototype'],
+        rows: [
+          [
+            'Re-import without duplicates',
+            'Natural keys; staging→canonical upsert in one TX; import_runs (hash, counts, diff); idempotent workers',
+            'Dedupe reservation_id by max(updated_at); one cash row per payment_id; full CSV reload on API start',
+          ],
+          [
+            'Change audit',
+            'Append-only financial_events; per-import row diff; actor + timestamp; closed accounting periods',
+            'Import logs; DQ flags; no immutable ledger yet — import_runs + events planned',
+          ],
+          [
+            'Access control',
+            'RBAC owner/finance/ops; PG RLS on owner_id; integration API keys; SSO',
+            'Open demo API; propertyId validation; optional JWT / demo user',
+          ],
+        ],
+      },
+      paragraphsAfterTable: [
+        'Scale path: materialized KPI views, read replicas, Redis cache invalidation, OTA schema contracts, AI via typed tools only. See docs/architecture.md in the repo.',
       ],
       bullets: [
-        'Natural keys: reservation_id+updated_at, payment_id, expense_id; idempotent merge',
-        'Staging → canonical in one TX; rollback import_run on failed DQ gate',
-        'FX service: rates with effective_from; snapshot policy (check-in vs payment date)',
-        'Redis cache for period-bounds/summary; invalidate by import_run_id',
-        'Schema contracts: JSON Schema / dbt tests on OTA export vs staging columns',
-        'Multi-tenant: PG row-level security or owner_id filters + integration API keys',
-        'Horizontal scale: stateless API behind LB; read replica for analytics; single write master',
-        'Explainability: KPI drill-down to source rows — required for CFO trust',
+        'Failed DQ gate → rollback import_run',
+        'Owners see own portfolio; finance sees all',
+        'KPI drill-down to source rows',
       ],
     },
   ],

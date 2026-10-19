@@ -2,10 +2,17 @@
 
 import type { Dictionary } from '@/lib/i18n/dictionaries';
 
-export type DashboardSection = 'overview' | 'charts' | 'assistant' | 'data' | 'deliverables';
+export type DashboardSection =
+  | 'overview'
+  | 'methodology'
+  | 'charts'
+  | 'assistant'
+  | 'data'
+  | 'deliverables';
 
 const SECTIONS: { id: DashboardSection; labelKey: keyof Dictionary }[] = [
   { id: 'overview', labelKey: 'navOverview' },
+  { id: 'methodology', labelKey: 'navMethodology' },
   { id: 'charts', labelKey: 'navCharts' },
   { id: 'assistant', labelKey: 'navAssistant' },
   { id: 'data', labelKey: 'navData' },

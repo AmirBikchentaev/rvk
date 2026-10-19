@@ -27,6 +27,8 @@ pnpm --filter @villa/web dev -- -p 3002   # :3002 — не пересекает�
 
 Dashboard: http://localhost:3002 (RU), http://localhost:3002/en (EN).
 
+**Задание п.1 (Dashboard):** вкладка **KPI** — фильтры объекта/периода; карточки gross, OTA, management fee, opex (paid), owner balance (оценка); accrual net, cash received, cash − accrual. Чеклист на KPI; таблица соответствия — в **Отчёт по тестовому заданию**, §1.
+
 **404 на `/api/analytics/by-property` или `/timeseries`:** на `:4000` часто висит **старый** процесс API (остался только `/analytics/summary` с обязательными `from`/`to`). Остановите его, пересоберите и запустите заново:
 
 ```bash
@@ -93,6 +95,9 @@ docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml up --bui
 **AI:** задайте `OPENAI_API_KEY` в `.env` — модель вызывает те же расчёты, что dashboard. Без ключа — автоматический offline-отчёт из БД.
 
 ## Финансовая методология
+
+> **В UI:** вкладки **KPI** (краткий тизер) и **Методология** — те же формулы, accrual vs cash, оценочный owner balance и недостающие данные для «точного» баланса. Источник истины в коде: `packages/shared/src/finance.ts`.
+
 
 ### Период и фильтр объекта
 
@@ -174,6 +179,8 @@ data/         исходные CSV
 docs/architecture.md
 docker-compose.yml
 ```
+
+**Задание п.4 (Архитектура):** источники → ingest → validation/storage → расчёты → dashboard; re-import, audit, RBAC — [docs/architecture.md](./docs/architecture.md) и **Отчёт по тестовому заданию** §4 на сайте.
 
 Схема системы: [docs/architecture.md](./docs/architecture.md).
 

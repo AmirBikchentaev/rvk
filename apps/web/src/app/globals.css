@@ -191,4 +191,64 @@ textarea {
   html[data-theme='light'] .vf-onboarding-secondary {
     @apply border-slate-300 text-slate-800 hover:bg-slate-50;
   }
+
+  .vf-formula-card {
+    @apply rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-sm;
+  }
+
+  html[data-theme='light'] .vf-formula-card {
+    @apply border-slate-200 bg-white;
+  }
+
+  .vf-formula-card--accrual {
+    @apply border-l-4 border-l-emerald-500/80;
+  }
+
+  .vf-formula-card--cash {
+    @apply border-l-4 border-l-sky-500/80;
+  }
+
+  .vf-formula-card--bridge {
+    @apply border-l-4 border-l-amber-500/80;
+  }
+
+  .vf-formula-card--period {
+    @apply border-l-4 border-l-violet-500/80;
+  }
+
+  .vf-formula-badge {
+    @apply shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)];
+  }
+
+  .vf-formula-expr {
+    @apply mt-3 rounded-lg border border-[var(--border)]/80 bg-[var(--bg-surface)] px-3 py-2.5 text-center font-mono text-[13px] leading-snug tracking-tight text-[var(--text-primary)];
+  }
+
+  html[data-theme='light'] .vf-formula-expr {
+    @apply border-slate-200 bg-slate-50 text-slate-900;
+  }
+
+  .vf-formula-compare {
+    @apply rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4;
+  }
+
+  html[data-theme='light'] .vf-formula-compare {
+    @apply border-slate-200 bg-slate-50/80;
+  }
+
+  .vf-formula-compare--accrual {
+    @apply border-t-2 border-t-emerald-500/70;
+  }
+
+  .vf-formula-compare--cash {
+    @apply border-t-2 border-t-sky-500/70;
+  }
+
+  .vf-formula-callout {
+    @apply rounded-xl border border-dashed border-[var(--accent)]/50 bg-[var(--accent-soft)]/40;
+  }
+
+  html[data-theme='light'] .vf-formula-callout {
+    @apply border-indigo-300/60 bg-indigo-50/60;
+  }
 }
