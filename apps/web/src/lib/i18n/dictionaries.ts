@@ -57,6 +57,10 @@ const ru = {
   kpiBreakColGross: 'effective_gross',
   kpiBreakTopFootnote:
     'Сумма по таблице может быть меньше Gross, если много мелких броней; итог KPI = полный агрегат по всем строкам в scope.',
+  kpiBreakCollapsedHint:
+    'Кратко: цифры на карточках — из API по текущим фильтрам. Полный разбор (строки в БД, формулы с IDR, топ броней) — по кнопке.',
+  kpiBreakShow: 'Показать разбор расчёта из БД',
+  kpiBreakHide: 'Свернуть',
   kpiBreakLoading: 'Загружаем разбор расчёта из API…',
   kpiBreakError: 'Не удалось загрузить kpi-breakdown. Пересоберите API после обновления @villa/shared.',
   navCharts: 'Графики',
@@ -245,6 +249,10 @@ const en: typeof ru = {
   kpiBreakColGross: 'effective_gross',
   kpiBreakTopFootnote:
     'Table subtotal can be below Gross when many small bookings exist; KPI cards use the full aggregate.',
+  kpiBreakCollapsedHint:
+    'Cards use the API for your current filters. Full breakdown (DB row counts, IDR formulas, top bookings) loads on demand.',
+  kpiBreakShow: 'Show DB calculation breakdown',
+  kpiBreakHide: 'Collapse',
   kpiBreakLoading: 'Loading calculation breakdown from API…',
   kpiBreakError: 'Could not load kpi-breakdown. Rebuild the API after updating @villa/shared.',
   navCharts: 'Charts',

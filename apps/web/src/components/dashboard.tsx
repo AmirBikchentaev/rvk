@@ -69,6 +69,7 @@ function formatDqScanned(
 export function Dashboard() {
   const { t, intlLocale, locale } = useLocale();
   const [section, setSection] = useState<DashboardSection>('overview');
+  const [kpiBreakdownOpen, setKpiBreakdownOpen] = useState(false);
   const [propertyId, setPropertyId] = useState('');
   const [useCustomPeriod, setUseCustomPeriod] = useState(false);
   const [from, setFrom] = useState('');
@@ -107,7 +108,7 @@ export function Dashboard() {
   const kpiBreakdownQuery = useQuery({
     queryKey: ['kpi-breakdown', propertyId, useCustomPeriod, from, to],
     queryFn: () => apiFetch<KpiBreakdown>(`/analytics/kpi-breakdown${analyticsSuffix}`),
-    enabled: section === 'overview',
+    enabled: section === 'overview' && kpiBreakdownOpen,
   });
 
   const dqQuery = useQuery({
@@ -300,20 +301,50 @@ export function Dashboard() {
                   <MetricCard label={t.accrualNet} value={formatIdr(summary.accrualNetBooking)} />
                   <MetricCard label={t.cashGap} value={formatIdr(summary.cashVsAccrualGap)} />
                 </div>
-                {kpiBreakdownQuery.isLoading && (
-                  <p className="text-sm text-[var(--text-muted)]">{t.kpiBreakLoading}</p>
-                )}
-                {kpiBreakdownQuery.isError && (
-                  <p className="text-sm text-red-600">{t.kpiBreakError}</p>
-                )}
-                {kpiBreakdownQuery.data ? (
-                  <KpiCalculationWalkthrough
-                    breakdown={kpiBreakdownQuery.data}
-                    t={t}
-                    intlLocale={intlLocale}
-                    propertyLabel={propertyLabel}
-                  />
-                ) : null}
+                <div className="vf-panel-muted p-4">
+                  {!kpiBreakdownOpen ? (
+                    <>
+                      <p className="text-sm text-[var(--text-secondary)]">{t.kpiBreakCollapsedHint}</p>
+                      <button
+                        type="button"
+                        className="vf-btn-accent mt-3 text-sm"
+                        onClick={() => setKpiBreakdownOpen(true)}
+                      >
+                        {t.kpiBreakShow}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-[var(--text-primary)]">{t.kpiBreakTitle}</p>
+                        <button
+                          type="button"
+                          className="vf-link text-sm"
+                          onClick={() => setKpiBreakdownOpen(false)}
+                        >
+                          {t.kpiBreakHide}
+                        </button>
+                      </div>
+                      {kpiBreakdownQuery.isLoading && (
+                        <p className="mt-3 text-sm text-[var(--text-muted)]">{t.kpiBreakLoading}</p>
+                      )}
+                      {kpiBreakdownQuery.isError && (
+                        <p className="mt-3 text-sm text-red-600">{t.kpiBreakError}</p>
+                      )}
+                      {kpiBreakdownQuery.data ? (
+                        <div className="mt-3">
+                          <KpiCalculationWalkthrough
+                            breakdown={kpiBreakdownQuery.data}
+                            t={t}
+                            intlLocale={intlLocale}
+                            propertyLabel={propertyLabel}
+                            embedded
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
                 <MethodologyTeaser
                   locale={locale}
                   onOpen={() => setSection('methodology')}

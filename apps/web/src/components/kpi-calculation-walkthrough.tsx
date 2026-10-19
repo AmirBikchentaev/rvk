@@ -53,11 +53,14 @@ export function KpiCalculationWalkthrough({
   t,
   intlLocale,
   propertyLabel,
+  embedded = false,
 }: {
   breakdown: KpiBreakdown;
   t: Dictionary;
   intlLocale: string;
   propertyLabel: string;
+  /** Without outer panel/title when opened from KPI collapse control */
+  embedded?: boolean;
 }) {
   const s = breakdown.summary;
   const f = breakdown.filters;
@@ -65,11 +68,15 @@ export function KpiCalculationWalkthrough({
   const idr = (n: number) => fmtIdr(intlLocale, n);
 
   return (
-    <section className="vf-panel space-y-4 p-5">
-      <div>
-        <h3 className="text-base font-semibold text-[var(--text-primary)]">{t.kpiBreakTitle}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{t.kpiBreakLead}</p>
-      </div>
+    <section className={embedded ? 'space-y-4' : 'vf-panel space-y-4 p-5'}>
+      {!embedded ? (
+        <div>
+          <h3 className="text-base font-semibold text-[var(--text-primary)]">{t.kpiBreakTitle}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{t.kpiBreakLead}</p>
+        </div>
+      ) : (
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{t.kpiBreakLead}</p>
+      )}
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
         <p>
