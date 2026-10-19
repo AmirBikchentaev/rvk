@@ -48,15 +48,6 @@ async function bootstrap() {
     }),
   );
 
-  if (process.env.NODE_ENV === 'production') {
-    const secret = process.env.JWT_SECRET?.trim();
-    if (!secret || secret === 'dev-secret' || secret === 'change-me-in-production') {
-      // eslint-disable-next-line no-console
-      console.error('[security] Set a strong JWT_SECRET in production');
-      process.exit(1);
-    }
-  }
-
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port);
   // eslint-disable-next-line no-console

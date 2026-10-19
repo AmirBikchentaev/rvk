@@ -8,9 +8,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { CurrentUser } from '../auth/current-user.decorator';
-import type { JwtUser } from '../auth/auth.types';
-import { PropertyAccessService } from '../auth/property-access.service';
+import { PropertyValidationService } from '../common/property-validation.service';
 import { AssistantService } from './assistant.service';
 
 class ChatDto {
@@ -43,13 +41,12 @@ class ChatDto {
 export class AssistantController {
   constructor(
     private readonly assistant: AssistantService,
-    private readonly propertyAccess: PropertyAccessService,
+    private readonly properties: PropertyValidationService,
   ) {}
 
   @Post('chat')
-  async chat(@Body() body: ChatDto, @CurrentUser() user: JwtUser) {
-    this.propertyAccess.assertPortfolioScope(user, body.propertyId);
-    await this.propertyAccess.assertPropertyAccess(user, body.propertyId);
+  async chat(@Body() body: ChatDto) {
+    await this.properties.assertKnownProperty(body.propertyId);
     return this.assistant.chat(body);
   }
 }

@@ -18,11 +18,11 @@ import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { ImportBootstrapService } from './import/import-bootstrap.service';
 import { AssistantModule } from './assistant/assistant.module';
 import { HealthModule } from './health/health.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { RolesGuard } from './auth/roles.guard';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
+    CommonModule,
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([
       {
@@ -54,8 +54,6 @@ import { RolesGuard } from './auth/roles.guard';
   ],
   providers: [
     ImportBootstrapService,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

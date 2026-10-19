@@ -39,13 +39,10 @@ pnpm --filter @villa/api dev
 
 Демо-логин (создаётся при старте API): `demo@villa.local` / `demo1234`.
 
-## Безопасность (базово)
+## Безопасность (демо)
 
-- Все `/api/*` (кроме `auth/login`, `auth/refresh`, `GET /health`) требуют **Bearer JWT**.
-- **IDOR:** `propertyId` проверяется в БД; чужая вилла → **404** (не 403). Роль `owner` + `users.owner_id` — только свои объекты; портфель без `propertyId` для owner запрещён.
-- **DQ:** только роли `admin` / `viewer`.
-- **Validation:** whitelist DTO, `propertyId` = `V###`, rate limit (Throttler), helmet, CORS.
-- **Production:** задайте `JWT_SECRET` в `.env` (compose не стартует без него). Для публичного демо без формы логина фронт по-прежнему может вызывать demo login — для реального доступа включите `NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN=true` и добавьте UI логина.
+- Авторизация **не обязательна** для dashboard API (`/auth/login` опционален).
+- **Validation:** DTO whitelist, `propertyId` только `V###` и существующий в БД, лимиты на login/assistant, helmet, CORS, Throttler.
 
 ## Docker Compose (сервер)
 
@@ -148,7 +145,7 @@ docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml up --bui
 
 - `synchronize: true` вместо миграций; re-import затирает таблицы фактов.
 - Redis в compose только в profile `full`, не используется в коде.
-- JWT обязателен на API (кроме `/auth/login`, `/auth/refresh`, `/health`). Demo auto-login только если не задан `NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN=true`.
+- Публичный demo API; опциональный JWT через `/auth/login`.
 - Нет owner statements, FX, payout ledger.
 
 ## Следующие 3 шага

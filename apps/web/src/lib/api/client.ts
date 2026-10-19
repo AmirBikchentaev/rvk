@@ -89,7 +89,6 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 }
 
 export async function ensureDemoSession() {
-  if (process.env.NEXT_PUBLIC_DISABLE_DEMO_AUTO_LOGIN === 'true') return;
   if (getTokens()) return;
   const base = getApiBase();
   try {
